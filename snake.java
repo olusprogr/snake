@@ -4,22 +4,24 @@ import java.awt.event.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.ArrayList;
+
 
 public class SnakeGame extends JPanel implements ActionListener {
 
     private final int WIDTH = 800;
     private final int HEIGHT = 600;
-    private final int BOX_SIZE = 20;
+    private final int BOX_SIZE = 40;
     private final int NUM_BOXES_X = WIDTH / BOX_SIZE;
     private final int NUM_BOXES_Y = HEIGHT / BOX_SIZE;
     private final int INIT_LENGTH = 3;
-    private final int NUM_APPLES = 100; // Number of apples to be generated
+    private final int NUM_APPLES = 1;
 
     private LinkedList<Point> snake;
     private List<Point> apples;
     private char direction;
     private boolean gameOver;
-    private boolean botEnabled; // Flag to enable/disable bot
+    private boolean botEnabled;
 
     private Timer timer;
 
@@ -51,20 +53,21 @@ public class SnakeGame extends JPanel implements ActionListener {
                     direction = 'L';
                 } else if (key == KeyEvent.VK_D && direction != 'L') {
                     direction = 'R';
-                } else if (key == KeyEvent.VK_B) { // Press 'B' to toggle bot
+                } else if (key == KeyEvent.VK_B) {
                     botEnabled = !botEnabled;
                 }
             }
         });
         setFocusable(true);
         requestFocusInWindow();
+        
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (!gameOver) {
             if (botEnabled) {
-                botMove(); // Move the bot if enabled
+                botMove();
             }
             moveSnake();
             checkCollision();
@@ -135,6 +138,7 @@ public class SnakeGame extends JPanel implements ActionListener {
     private void botMove() {
     Point head = snake.getFirst();
     List<Point> possibleMoves = getPossibleMoves(head);
+    System.out.println(possibleMoves);
     Point targetApple = findNearestApple(head);
     
     if (targetApple != null) {
@@ -150,7 +154,7 @@ public class SnakeGame extends JPanel implements ActionListener {
         }
 
         if (bestMove != null) {
-            direction = determineDirection(head, bestMove);
+            direction = determineDirection(head, bestMove).charAt(0);
         }
     }
 }
@@ -217,18 +221,38 @@ public class SnakeGame extends JPanel implements ActionListener {
     }
     
     private List<Point> getPossibleMoves(Point head) {
-        List<Point> moves = new ArrayList<>();
-        Point up = new Point(head.x, head.y - 1);
-        Point down = new Point(head.x, head.y + 1);
-        Point left = new Point(head.x - 1, head.y);
-        Point right = new Point(head.x + 1, head.y);
+        List<ArrayList<Point>> moves = new ArrayList<>();
+        List<Point> lastMoves = new ArrayList<>();
+        List<Point> largestMoveList = new ArrayList<>();
+
+        
+        for (int i = 0; i < 10; i++) {
+            
+            Point up = new Point(head.x, head.y - i);
+            Point down = new Point(head.x, head.y + i);
+            Point left = new Point(head.x - i, head.y);
+            Point right = new Point(head.x + i, head.y);
+            
+            if (isValidMove(up)) lastMoves.add(up);
+            if (isValidMove(down)) lastMoves.add(down);
+            if (isValidMove(left)) lastMoves.add(left);
+            if (isValidMove(right)) lastMoves.add(right);
+            
+            moves.add(new ArrayList<>(lastMoves));
+            System.out.println(moves);
+            lastMoves.clear();
+        }
+        
+        int maxSize = 0;
+        
+        for (ArrayList<Point> moveList : moves) {
+            if (moveList.size() > maxSize) {
+                largestMoveList = moveList;
+                maxSize = moveList.size();
+            }
+        }
     
-        if (isValidMove(up)) moves.add(up);
-        if (isValidMove(down)) moves.add(down);
-        if (isValidMove(left)) moves.add(left);
-        if (isValidMove(right)) moves.add(right);
-    
-        return moves;
+        return largestMoveList;
     }
     
     private boolean isValidMove(Point move) {
@@ -260,5 +284,9 @@ public class SnakeGame extends JPanel implements ActionListener {
                 }
             }
         });
+    }
+    
+    private void calculateNearestWayToApple() {
+        
     }
 }
